@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Islamic Finance Suite (With Live Equity Tracker)</title>
+    <style>
+        :root {
+            --primary: #0a4d2e;
+            --secondary: #147a46;
+            --bg: #f4f6f8;
+            --card: #ffffff;
+            --text: #1e293b;
+            --muted: #64748b;
+            --border: #cbd5e1;
+            --accent: #d97706;
+            --progress-client: #0a4d2e;
+            --progress-bank: #e2e8f0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .dashboard {
+            background: var(--card);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 650px;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+
+        h2 {
+            color: var(--primary);
+            text-align: center;
+            margin: 0 0 5px 0;
+            font-size: 1.5rem;
+        }
+
+        .author-tag {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--accent);
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 25px;
+        }
+
+        .tabs-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            background: #e2e8f0;
+            padding: 6px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+        }
+
+        .tab {
+            text-align: center;
+            padding: 10px 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: var(--muted);
+            border-radius: 6px;
+            background: transparent;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .model-desc {
+            font-size: 0.85rem;
+            color: var(--text);
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border-left: 4px solid var(--accent);
+            line-height: 1.4;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .full-width {
+            grid-column: span 2;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+            background-color: #fff;
+        }
+
+        button {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: var(--secondary);
+        }
+
+        .results-box {
+            margin-top: 30px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .results-title {
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-size: 1rem;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .party-header {
+            font-weight: bold;
+            color: var(--primary);
+            margin: 15px 0 8px 0;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            border-bottom: 1px dashed var(--border);
+            padding-bottom: 4px;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .row.highlight {
+            font-weight: bold;
+            background: #f0fdf4;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px dashed #bbf7d0;
+        }
+
+        .val {
+            font-weight: 600;
+        }
+
+        /* Monthly Equity Sub-panel */
+        .tracker-panel {
+            margin-top: 20px;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 15px;
+            display: none;
+        }
+
+        .tracker-title {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--accent);
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #edf2f7;
+            padding-bottom: 5px;
+        }
+
+        .slider-container {
+            margin: 15px 0;
+        }
+
+        .ownership-bar {
+            height: 12px;
+            background: var(--progress-bank);
+            border-radius: 6px;
+            overflow: hidden;
+            display: flex;
+            margin: 10px 0;
+        }
+
+        .client-share-bar {
+            background: var(--progress-client);
+            height: 100%;
+            transition: width 0.2s ease;
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+    <h2>Islamic Finance Matrix</h2>
+    <div class="author-tag">Based on Research by Mufti Taqi Usmani</div>
+    
+    <div class="tabs-container">
+        <div class="tab active" id="tab_murabaha" onclick="switchModel('murabaha')">Murabaha</div>
+        <div class="tab" id="tab_musharakah" onclick="switchModel('musharakah')">Dim. Musharakah</div>
+        <div class="tab" id="tab_mudarabah" onclick="switchModel('mudarabah')">Mudarabah</div>
+        <div class="tab" id="tab_salam" onclick="switchModel('salam')">Bai' Salam</div>
+        <div class="tab" id="tab_istisna" onclick="switchModel('istisna')">Istisna'a</div>
+    </div>
+
+    <div class="model-desc" id="modelDescription"></div>
+
+    <div class="grid" id="inputGrid"></div>
+
+    <button onclick="calculateFinance()">Execute Shariah Evaluation</button>
+
+    <!-- Financial Statements Split Block -->
+    <div class="results-box">
+        <div class="results-title" id="resTitle">Contract Matrix Summary</div>
+        
+        <div id="clientOutputBlock">
+            <div class="party-header" id="clientHeader">CLIENT ACCOUNT DETAILS</div>
+            <div id="clientRows"></div>
+        </div>
+
+        <div id="ownerOutputBlock">
+            <div class="party-header" id="ownerHeader">CAPITAL OWNER / INSTITUTION ACCOUNTS</div>
+            <div id="ownerRows"></div>
+        </div>
+
+        <!-- DIMINISHING MUSHARAKAH MONTHLY PROPERTY TRACKER -->
+        <div class="tracker-panel" id="musharakahTracker">
+            <div class="tracker-title">📅 Monthly Ownership Evolution</div>
+            <div class="slider-container">
+                <label for="monthSlider" style="display:flex; justify-content:space-between;">
+                    <span>Move timeline to simulate target payment month:</span>
+                    <strong id="sliderMonthLabel">Month 1</strong>
+                </label>
+                <input type="range" id="monthSlider" min="1" max="180" value="1" oninput="updateMonthlySchedule()">
+            </div>
+
+            <div class="ownership-bar">
+                <div class="client-share-bar" id="clientBar" style="width: 20%;"></div>
+            </div>
+
+            <div class="row" style="font-size:0.85rem; margin-bottom:12px;">
+                <span>🟢 Your Property Ownership: <strong id="lblClientPct">20%</strong></span>
+                <span>⚪ Bank Property Ownership: <strong id="lblBankPct">80%</strong></span>
+            </div>
+
+            <div class="row" style="font-size:0.9rem; padding-top:6px; border-top:1px dashed #edf2f7;">
+                <span>This Month's Rental Share paid to bank:</span>
+                <span class="val" id="lblMonthRent" style="color:var(--accent);">$0.00</span>
+            </div>
+            <div class="row" style="font-size:0.9rem;">
+                <span>This Month's Equity Purchase (Buying shares):</span>
+                <span class="val" id="lblMonthEquity" style="color:var(--primary);">$0.00</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentModel = 'murabaha';
+    let dmSchedule = []; // Holds arrays of calculated monthly schedules for tracking
+
+    const modelsData = {
+        murabaha: {
+            desc: "<strong>Murabaha (Cost-Plus Sale):</strong> The institution purchases a physical asset and sells it to the client with an explicit, agreed profit markup. Deferred payments. <em>Rule: Profit cannot be added to a debt upon default.</em>",
+            fields: [
+                { id: 'cost', label: 'Asset Purchase Cost Price ($)', type: 'number', value: 50000 },
+                { id: 'deposit', label: 'Client Down Payment ($)', type: 'number', value: 10000 },
+                { id: 'rate', label: 'Annual Profit Rate Markup (%)', type: 'number', value: 6.0 },
+                { id: 'tenor', label: 'Contract Tenor (Years)', type: 'number', value: 5 }
+            ]
+        },
+        musharakah: {
+            desc: "<strong>Diminishing Musharakah (Joint Ownership):</strong> The client and financier co-own an asset. The client rents the financier's portion (Ijara) and progressively buys out their equity units over time.",
+            fields: [
+                { id: 'cost', label: 'Property Fair Market Value ($)', type: 'number', value: 250000 },
+                { id: 'deposit', label: 'Client Capital Contribution ($)', type: 'number', value: 50000 },
+                { id: 'rate', label: 'Agreed Annual Rental Yield (%)', type: 'number', value: 5.5 },
+                { id: 'tenor', label: 'Buyout Horizon (Years)', type: 'number', value: 15 }
+            ]
+        },
+        mudarabah: {
+            desc: "<strong>Mudarabah (Capital Partnership):</strong> The investor (Rabb-ul-Mal) funds 100% of the project. The manager (Mudarib) contributes labor. Profits are shared via percentage ratio. <em>Rule: Financial loss belongs solely to capital.</em>",
+            fields: [
+                { id: 'capital', label: 'Investor Investment Capital ($)', type: 'number', value: 100000 },
+                { id: 'projectedProfit', label: 'Projected Enterprise Gross Profit ($)', type: 'number', value: 30000 },
+                { id: 'ownerRatio', label: 'Investor Profit Sharing Share (%)', type: 'number', value: 40 },
+                { id: 'lossScenario', label: 'Force Business Loss Simulation?', type: 'select', options: [{v:'no', t:'No (Profitable)'}, {v:'yes', t:'Yes (Total Loss)'}] }
+            ]
+        },
+        salam: {
+            desc: "<strong>Bai' Salam (Forward Commodities):</strong> Full advance spot cash is paid to a seller for specific agricultural or standardized commodities delivered on a specified future date.",
+            fields: [
+                { id: 'totalAdvance', label: 'Total Advance Spot Capital Given ($)', type: 'number', value: 40000 },
+                { id: 'marketVal', label: 'Expected Value of Goods at Delivery ($)', type: 'number', value: 46000 },
+                { id: 'months', label: 'Delivery Schedule (Months)', type: 'number', value: 6 }
+            ]
+        },
+        istisna: {
+            desc: "<strong>Istisna'a (Progressive Manufacturing):</strong> A contract for construction or manufacturing of long-term assets where structural execution progresses through physical construction milestones.",
+            fields: [
+                { id: 'totalContract', label: 'Total Contract Value ($)', type: 'number', value: 500000 },
+                { id: 'milestones', label: 'Total Construction Pay Milestones', type: 'number', value: 5 },
+                { id: 'ownerMarkup', label: 'Built-in Developer Profit Margin (%)', type: 'number', value: 12 }
+            ]
+        }
+    };
+
+    function renderInputs() {
+        const grid = document.getElementById('inputGrid');
+        grid.innerHTML = '';
+        const currentFields = modelsData[currentModel].fields;
+
+        currentFields.forEach(f => {
+            const wrap = document.createElement('div');
+            wrap.className = 'form-group';
+            if(f.id === 'cost' || f.id === 'capital' || f.id === 'totalContract') wrap.className = 'form-group full-width';
+            
+            const label = document.createElement('label');
+            label.innerText = f.label;
+            wrap.appendChild(label);
+
+            if(f.type === 'select') {
+                const sel = document.createElement('select');
+                sel.id = f.id;
+                f.options.forEach(o => {
+                    const opt = document.createElement('option');
+                    opt.value = o.v;
+                    opt.innerText = o.t;
+                    sel.appendChild(opt);
+                });
+                wrap.appendChild(sel);
+            } else {
+                const inp = document.createElement('input');
+                inp.type = 'number';
+                inp.id = f.id;
+                inp.value = f.value;
+                wrap.appendChild(inp);
+            }
+            grid.appendChild(wrap);
+        });
+        document.getElementById('modelDescription').innerHTML = modelsData[currentModel].desc;
+        document.getElementById('musharakahTracker').style.display = (currentModel === 'musharakah') ? 'block' : 'none';
+    }
+
+    function switchModel(model) {
+        currentModel = model;
+        Object.keys(modelsData).forEach(m => {
+            document.getElementById(`tab_${m}`).classList.toggle('active', m === model);
+        });
+        
+        // Reset label modifications safely
+        document.getElementById('clientHeader').innerText = "CLIENT ACCOUNT DETAILS";
+        document.getElementById('ownerHeader').innerText = "CAPITAL OWNER / INSTITUTION ACCOUNTS";
+
+        renderInputs();
+        calculateFinance();
+    }
+
+    function calculateFinance() {
+        const clientRows = document.getElementById('clientRows');
+        const ownerRows = document.getElementById('ownerRows');
+        clientRows.innerHTML = '';
+        ownerRows.innerHTML = '';
+
+        document.getElementById('resTitle').innerText = currentModel.toUpperCase() + " Balance Statement";
+
+        if (currentModel === 'murabaha') {
+            const cost = parseFloat(document.getElementById('cost').value) || 0;
+            const deposit = parseFloat(document.getElementById('deposit').value) || 0;
+            const rate = parseFloat(document.getElementById('rate').value) || 0;
+            const tenor = parseFloat(document.getElementById('tenor').value) || 0;
+
+            const principal = cost - deposit;
+            const totalProfit = principal * (rate / 100) * tenor;
+            const totalContract = principal + totalProfit;
+            const monthly = totalContract / (tenor * 12);
+
+            addOutputRow(clientRows, "Initial Down Payment Given:", formatCurrency(deposit));
+            addOutputRow(clientRows, "Total Installment Commitments:", formatCurrency(totalContract));
+            addOutputRow(clientRows, "Fixed Monthly Installment Payment:", formatCurrency(monthly), true);
+
+            addOutputRow(ownerRows, "Total Financed Principal Funded:", formatCurrency(principal));
+            addOutputRow(ownerRows, "Absolute Realized Trade Profit:", formatCurrency(totalProfit), true);
+
+        } else if (currentModel === 'musharakah') {
+            const cost = parseFloat(document.getElementById('cost').value) || 0;
+            const deposit = parseFloat(document.getElementById('deposit').value) || 0;
+            const rate = parseFloat(document.getElementById('rate').value) || 0;
+            const tenor = parseFloat(document.getElementById('tenor').value) || 0;
+
+            const principal = cost - deposit;
+            const totalMonths = tenor * 12;
+            const monthlyRate = (rate / 100) / 12;
+            
+            const levelPayment = principal * (monthlyRate * Math.pow(1 + monthlyRate, totalMonths)) / (Math.pow(1 + monthlyRate, totalMonths) - 1);
+            const totalRentAndEquity = levelPayment * totalMonths;
+            const totalRentProfit = totalRentAndEquity - principal;
+
+            addOutputRow(clientRows, "Your Equity Upfront (Share):", formatCurrency(deposit));
+            addOutputRow(clientRows, "Total Rental + Buyout Outlays:", formatCurrency(totalRentAndEquity));
+            addOutputRow(clientRows, "Initial Amortized Monthly Payment:", formatCurrency(levelPayment), true);
+
+            addOutputRow(ownerRows, "Financier Equity Funded Upfront:", formatCurrency(principal));
+            addOutputRow(ownerRows, "Cumulative Rental Profit Yield:", formatCurrency(totalRentProfit), true);
+
+            // Generate Month-by-Month Schedule for the UI Slider Tracker
+            dmSchedule = [];
+            let remainingBankEquity = principal;
+            let currentClientEquity = deposit;
+
+            for (let m = 1; m <= totalMonths; m++) {
+                let monthlyRentPayment = remainingBankEquity * monthlyRate;
+                let monthlyEquityPurchase = levelPayment - monthlyRentPayment;
+                
+                remainingBankEquity -= monthlyEquityPurchase;
+                currentClientEquity += monthlyEquityPurchase;
+
+                if (remainingBankEquity < 0) remainingBankEquity = 0;
+
+                dmSchedule.push({
+                    month: m,
+                    rent: monthlyRentPayment,
+                    equityBuyout: monthlyEquityPurchase,
+                    clientPct: (currentClientEquity / cost) * 100,
+                    bankPct: (remainingBankEquity / cost) * 100
+                });
+            }
+
+            // Configure interactive slider boundaries
+            const slider = document.getElementById('monthSlider');
+            slider.max = totalMonths;
+            slider.value = 1;
+            updateMonthlySchedule();
+
+        } else if (currentModel === 'mudarabah') {
+            const capital = parseFloat(document.getElementById('capital').value) || 0;
+            const projectedProfit = parseFloat(document.getElementById('projectedProfit').value) || 0;
+            const ownerRatio = parseFloat(document.getElementById('ownerRatio').value) || 0;
+            const lossScenario = document.getElementById('lossScenario').value;
+
+            document.getElementById('clientHeader').innerText = "MANAGER (MUDARIB) METRICS";
+            document.getElementById('ownerHeader').innerText = "INVESTOR (RABB-UL-MAL) METRICS";
+
+            if (lossScenario === 'yes') {
+                addOutputRow(clientRows, "Labor Return / Salary Payout:", "$0.00 (Lost Time/Effort)");
+                addOutputRow(clientRows, "Financial Loss Liability:", "$0.00 (Protected by Shariah)");
+
+                addOutputRow(ownerRows, "Initial Principal Invested:", formatCurrency(capital));
+                addOutputRow(ownerRows, "Net Capital Loss (Borne by Capital):", "-" + formatCurrency(capital), true);
+            } else {
+                const ownerShare = projectedProfit * (ownerRatio / 100);
+                const managerShare = projectedProfit - ownerShare;
+
+                addOutputRow(clientRows, "Your Profit Payout Share (" + (100 - ownerRatio) + "%):", formatCurrency(managerShare), true);
+                
+                addOutputRow(ownerRows, "Initial Capital Invested:", formatCurrency(capital));
+                addOutputRow(ownerRows, "Investor Profit Return (" + ownerRatio + "%):", formatCurrency(ownerShare));
+                addOutputRow(ownerRows, "Total Maturity Cash Value:", formatCurrency(capital + ownerShare), true);
+            }
+
+        } else if (currentModel === 'salam') {
+            const totalAdvance = parseFloat(document.getElementById('totalAdvance').value) || 0;
+            const marketVal = parseFloat(document.getElementById('marketVal').value) || 0;
+
+            document.getElementById('clientHeader').innerText = "SELLER (COMMODITY PRODUCER)";
+            document.getElementById('ownerHeader').innerText = "BUYER (FINANCIAL INSTITUTION)";
+
+            addOutputRow(clientRows, "Immediate Liquid Cash Received:", formatCurrency(totalAdvance), true);
+            addOutputRow(clientRows, "Future Delivery Obligation Value:", formatCurrency(marketVal));
+
+            addOutputRow(ownerRows, "Spot Capital Deployed Upfront:", formatCurrency(totalAdvance));
+            addOutputRow(ownerRows, "Implicit Arbitrage Trade Profit:", formatCurrency(marketVal - totalAdvance), true);
+
+        } else if (currentModel === 'istisna') {
+            const totalContract = parseFloat(document.getElementById('totalContract').value) || 0;
+            const milestones = parseFloat(document.getElementById('milestones').value) || 1;
+            const ownerMarkup = parseFloat(document.getElementById('ownerMarkup').value) || 0;
+
+            document.getElementById('clientHeader').innerText = "PURCHASER OUTLAYS";
+            document.getElementById('ownerHeader').innerText = "MANUFACTURER / DEVELOPER STATEMENT";
+
+            const milestonePayment = totalContract / milestones;
+            const netProfit = totalContract * (ownerMarkup / 100);
+
+            addOutputRow(clientRows, "Total Ultimate Asset Cost:", formatCurrency(totalContract));
+            addOutputRow(clientRows, "Estimated Cost Per Milestone Stage:", formatCurrency(milestonePayment), true);
+
+            addOutputRow(ownerRows, "Raw Materials & Construction Cost:", formatCurrency(totalContract - netProfit));
+            addOutputRow(ownerRows, "Earned Real Asset Profit Margin:", formatCurrency(netProfit), true);
+        }
+    }
+
+    function updateMonthlySchedule() {
+        if (currentModel !== 'musharakah' || dmSchedule.length === 0) return;
+
+        const idx = parseInt(document.getElementById('monthSlider').value) - 1;
+        const data = dmSchedule[idx];
+
+        if (!data) return;
+
+        document.getElementById('sliderMonthLabel').innerText = "Month " + data.month;
+        document.getElementById('lblClientPct').innerText = data.clientPct.toFixed(1) + "%";
+        document.getElementById('lblBankPct').innerText = data.bankPct.toFixed(1) + "%";
+        document.getElementById('clientBar').style.width = data.clientPct + "%";
+        document.getElementById('lblMonthRent').innerText = formatCurrency(data.rent);
+        document.getElementById('lblMonthEquity').innerText = formatCurrency(data.equityBuyout);
+    }
+
+    function addOutputRow(container, labelText, valText, isHighlight = false) {
+        const r = document.createElement('div');
+        r.className = isHighlight ? "row highlight" : "row";
+        const lbl = document.createElement('span');
+        lbl.innerText = labelText;
+        const v = document.createElement('span');
+        v.className = "val";
+        v.innerText = valText;
+        r.appendChild(lbl);
+        r.appendChild(v);
+        container.appendChild(r);
+    }
+
+    function formatCurrency(val) {
+        return '$' + Math.abs(val).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+    }
+
+    window.onload = function() {
+        switchModel('murabaha');
+    }
+</script>
+
+</body>
+</html>
